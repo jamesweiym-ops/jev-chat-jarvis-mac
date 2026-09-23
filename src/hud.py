@@ -578,8 +578,9 @@ class HudController(NSObject):
         Three properties keep it safe: it is OFF by default (menu-bar toggle); clicks pass
         through (`ignoresMouseEvents`), so WeChat never gets blocked; and perception
         captures by window ID, so this window can never pollute our own OCR.
-        Coordinate mapping assumes the 1x nominal capture's pixel size equals the window's
-        point size — that is exactly what kCGWindowImageNominalResolution promises.
+        Coordinate mapping is pure normalized geometry × window point size, so it is
+        independent of the capture's pixel resolution (the old 1x-nominal assumption went
+        away with #83's subprocess capture).
         """
         self._ov_panel = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(
             NSMakeRect(0, 0, 200, 200), NSWindowStyleMaskBorderless,
