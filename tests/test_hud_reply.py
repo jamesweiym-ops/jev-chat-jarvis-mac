@@ -110,6 +110,19 @@ class HudReplyTests(unittest.TestCase):
         self.assertIsNone(self.h._input_target['box'])
         self.assertEqual(self.h._reply_key[:2], ('chat', '下午开会'))
 
+    def test_foreground_change_during_input_signature_discards_read(self):
+        def switch_foreground(*args):
+            self.h._set_foreground_state(False)
+            return 'stale-signature'
+
+        with patch.object(HUD['fill'], 'locate_input', return_value={'box': None}), \
+             patch('input_region.locate_visual_input', return_value=(1, 2, 3, 4)), \
+             patch('visual_fill.chat_signature', side_effect=switch_foreground):
+            self.incoming()
+        self.assertIsNone(self.h._input_target)
+        self.assertIsNone(self.h._reply_key)
+        self.assertIsNone(self.h._pregen_req)
+
     def test_switch_short_titles_with_same_message_invalidates_old_reply(self):
         titles = [extract_chat_title([block(name, .40, .94, .10, .025)])
                   for name in ('张三', '李经理')]

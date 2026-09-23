@@ -1653,17 +1653,21 @@ class HudController(NSObject):
             # AX can transiently return None while WeChat rebuilds its tree during a
             # foreground/window transition. Keep this frame readable and let the next
             # scheduled read retry; never let a missing target abort the read worker.
-            self._input_target = target if isinstance(target, dict) else {
+            target = dict(target) if isinstance(target, dict) else {
                 "box": None, "rect": None, "window": dict(res["window"]),
                 "reason": "输入框暂时不可用",
             }
-            if self._input_target.get("box") is None:
+            if target.get("box") is None:
                 from input_region import locate_visual_input
-                self._input_target["visual_rect"] = (res.get("input_rect")
+                target["visual_rect"] = (res.get("input_rect")
                                                      or locate_visual_input(res["window"]))
-                if self._input_target["visual_rect"]:
+                if target["visual_rect"]:
                     from visual_fill import chat_signature
-                    self._input_target["chat_signature"] = chat_signature(res["window"], self._input_target["visual_rect"])
+                    target["chat_signature"] = chat_signature(res["window"], target["visual_rect"])
+            if capture_foreground_epoch != self._foreground_epoch:
+                self._next_read_ts = time.time() + FAST_TICK
+                return
+            self._input_target = target
             self._input_window = dict(res["window"])
             self._input_next = now_input + 1.0
         with self._context_lock:
