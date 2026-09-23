@@ -28,12 +28,12 @@ def hud_harness():
     names = {'_work_inner', '_set_foreground_state', '_push', '_reply_task', '_reply_current', '_push_reply',
              'applyReplyUpdate_', 'applyWaiting_', '_context_text', '_stream_hook',
              '_take_pregen', '_gen_with_pregen', '_finish_generate', '_enqueue_prework',
-             '_prejudge_loop', '_pregen_loop', '_analyze', '_run_generation', 'reload_conversations', '_context_changed', 'save_background', 'configure_context', 'clear_history', '_regen_work', '_regenerate_work', 'regenerateReply_', '_rank_payload', '_payload_from_gen'}
+             '_prejudge_loop', '_pregen_loop', '_analyze', '_run_generation', 'reload_conversations', '_context_changed', 'save_background', 'configure_context', 'clear_history', '_regen_work', '_regenerate_work', 'regenerateReply_', '_rank_payload', '_payload_from_gen', 'toggleAlwaysOnTop_'}
     methods = [n for n in source.body if isinstance(n, ast.FunctionDef) and n.name in names]
     for method in methods:
         method.decorator_list = []
     klass = ast.ClassDef(name='Harness', bases=[], keywords=[], body=methods, decorator_list=[])
-    scope = {'LowMemoryError': LowMemoryError, 'ModelNotDownloadedError': ModelNotDownloadedError, 'chat_context': chat_context, 'fill': SimpleNamespace(locate_input=Mock(return_value={'box': None, 'rect': None, 'reason': 'test'})), 'time': time, 'threading': threading, '_log': lambda *_: None,
+    scope = {'LowMemoryError': LowMemoryError, 'ModelNotDownloadedError': ModelNotDownloadedError, 'chat_context': chat_context, 'fill': SimpleNamespace(locate_input=Mock(return_value={'box': None, 'rect': None, 'reason': 'test'})), 'time': time, 'threading': threading, 'AppKit': SimpleNamespace(NSFloatingWindowLevel=3, NSNormalWindowLevel=0, NSOnState=1, NSOffState=0), '_log': lambda *_: None,
              'frontmost_app_is_wechat': Mock(return_value=True),
              'screen_capture_ok': Mock(return_value=True), 'request_screen_capture': Mock(),
              'read_conversation': Mock(),

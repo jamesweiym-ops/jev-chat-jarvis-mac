@@ -274,6 +274,7 @@ class HudController(NSObject):
         self._collapsed = False
         self._expanded_h = None       # full height, captured the first time we collapse
         self._paused = False
+        self._always_on_top = True     # menu-bar switch; preserve the historical default
         # YOLO overlay default: JEV_BOXES=1 (or true/yes/on) in the env file starts it on;
         # either way the menu-bar item flips it at runtime
         self._show_boxes = userconfig.get("JEV_BOXES").strip().lower() in (
@@ -304,7 +305,8 @@ class HudController(NSObject):
                  | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskNonactivatingPanel)
         self.panel = NSPanel.alloc().initWithContentRect_styleMask_backing_defer_(
             NSMakeRect(0, 0, PANEL_W, PANEL_H), style, NSBackingStoreBuffered, False)
-        self.panel.setLevel_(AppKit.NSFloatingWindowLevel)
+        self.panel.setLevel_(AppKit.NSFloatingWindowLevel if self._always_on_top
+                             else AppKit.NSNormalWindowLevel)
         self.panel.setOpaque_(False)
         self.panel.setAlphaValue_(1.0)
         self.panel.setHasShadow_(True)
@@ -702,6 +704,7 @@ class HudController(NSObject):
             ("显示 / 收起面板", "collapsePanel:", ""),
             ("暂停读屏", "togglePause:", ""),
             ("YOLO 检测框", "toggleBoxes:", ""),
+            ("固定在最前面", "toggleAlwaysOnTop:", ""),
             ("立即重新分析", "reanalyze:", ""),
             ("模型设置…", "openSettings:", ","),
         ):
@@ -712,8 +715,11 @@ class HudController(NSObject):
             item.setTarget_(self)
         self.pause_item = menu.itemArray()[1]
         self.boxes_item = menu.itemArray()[2]
+        self.always_on_top_item = menu.itemArray()[3]
         self.boxes_item.setState_(
             AppKit.NSOnState if self._show_boxes else AppKit.NSOffState)
+        self.always_on_top_item.setState_(
+            AppKit.NSOnState if self._always_on_top else AppKit.NSOffState)
         self.status_item.setMenu_(menu)
 
     def openSettings_(self, sender):
@@ -1338,6 +1344,17 @@ class HudController(NSObject):
             self.last_seen = None      # force a fresh read of whatever is on screen
             self.analyzed_text = None
             self._render("status", "已恢复 · 读屏中", PALETTE["muted"])
+
+    def toggleAlwaysOnTop_(self, sender):
+        """Toggle only the HUD's window level; the menu action takes effect immediately."""
+        self._always_on_top = not self._always_on_top
+        self.panel.setLevel_(AppKit.NSFloatingWindowLevel if self._always_on_top
+                             else AppKit.NSNormalWindowLevel)
+        self.always_on_top_item.setState_(
+            AppKit.NSOnState if self._always_on_top else AppKit.NSOffState)
+        if self._always_on_top:
+            # Raise the already-visible panel without making it key or stealing WeChat focus.
+            self.panel.orderFrontRegardless()
 
     def reanalyze_(self, sender):
         if self._paused:
