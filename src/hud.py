@@ -1649,8 +1649,15 @@ class HudController(NSObject):
         now_input = time.monotonic()
         if (res["window"] != getattr(self, "_input_window", None)
                 or now_input >= getattr(self, "_input_next", 0)):
-            self._input_target = fill.locate_input(res["window"])
-            if self._input_target["box"] is None:
+            target = fill.locate_input(res["window"])
+            # AX can transiently return None while WeChat rebuilds its tree during a
+            # foreground/window transition. Keep this frame readable and let the next
+            # scheduled read retry; never let a missing target abort the read worker.
+            self._input_target = target if isinstance(target, dict) else {
+                "box": None, "rect": None, "window": dict(res["window"]),
+                "reason": "输入框暂时不可用",
+            }
+            if self._input_target.get("box") is None:
                 from input_region import locate_visual_input
                 self._input_target["visual_rect"] = (res.get("input_rect")
                                                      or locate_visual_input(res["window"]))
@@ -1716,7 +1723,7 @@ class HudController(NSObject):
                 note = "（首次，含 Vision 加载）" if first_read and t.get("ocr", 0) > 400 else ""
                 # say when the fast in-process capture was refused: otherwise a permanent
                 # fallback looks like ordinary slowness instead of something to report
-                slow_cap = " · 抓屏走了子进程（进程内被抓图接口拒绝）" \
+                slow_cap = " · 抓屏走了带超时的子进程" \
                     if t.get("capture_path") == "subprocess" else ""
                 _log(f"读屏 抓取 {t.get('capture', 0):.0f}ms + OCR {t.get('ocr', 0):.0f}ms"
                      f" = {t.get('total', 0):.0f}ms · 读到 {len(msgs)} 条（对方 {len(thems)} 条）"
