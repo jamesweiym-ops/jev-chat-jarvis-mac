@@ -84,6 +84,13 @@ class HudReplyTests(unittest.TestCase):
     def incoming(self):
         self.read([block('下午开会', .40, .70, .15)])
 
+    def test_transient_missing_input_target_does_not_abort_read(self):
+        HUD['fill'].locate_input.return_value = None
+        self.incoming()
+        self.assertIsInstance(self.h._input_target, dict)
+        self.assertIsNone(self.h._input_target['box'])
+        self.assertEqual(self.h._reply_key[:2], ('chat', '下午开会'))
+
     def test_switch_short_titles_with_same_message_invalidates_old_reply(self):
         titles = [extract_chat_title([block(name, .40, .94, .10, .025)])
                   for name in ('张三', '李经理')]

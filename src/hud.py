@@ -1632,8 +1632,15 @@ class HudController(NSObject):
         now_input = time.monotonic()
         if (res["window"] != getattr(self, "_input_window", None)
                 or now_input >= getattr(self, "_input_next", 0)):
-            self._input_target = fill.locate_input(res["window"])
-            if self._input_target["box"] is None:
+            target = fill.locate_input(res["window"])
+            # AX can transiently return None while WeChat rebuilds its tree during a
+            # foreground/window transition. Keep this frame readable and let the next
+            # scheduled read retry; never let a missing target abort the read worker.
+            self._input_target = target if isinstance(target, dict) else {
+                "box": None, "rect": None, "window": dict(res["window"]),
+                "reason": "输入框暂时不可用",
+            }
+            if self._input_target.get("box") is None:
                 from input_region import locate_visual_input
                 self._input_target["visual_rect"] = (res.get("input_rect")
                                                      or locate_visual_input(res["window"]))
