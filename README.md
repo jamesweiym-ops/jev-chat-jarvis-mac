@@ -73,6 +73,7 @@ uv run python probe/bootstrap_regression.py      # 两种启动入口的离线�
 - API 格式由密钥组决定：`OPENAI_*` 使用 OpenAI 格式，`ANTHROPIC_*` 使用 Anthropic 格式；自定义地址不需要包含服务名称。Ollama 可填 `http://localhost:11434/v1`、密钥 `ollama`，模型从本地服务获取或手填。Jev 地址带不带末尾 `/v1` 都行，与手动配置共用同一条拼接规则。
 - 钥匙串：不新增钥匙串读写。如果原 env 用 `$(security find-generic-password …)` 等 shell 表达式提供密钥，窗口不执行表达式、不展示其内容，未输入新密钥时保留原行；仍由已有启动器执行。要在窗口测试该服务，需明确输入密钥；保存将用输入值替换原表达式。外部注入的密钥继续遵循环境变量优先级。
 - `JEV_BOXES`、`JEV_TONES`、`OPENAI_EXTRA_BODY` 暂仍通过 env 配置，保存窗口不会改动它们。OpenAI 连接测试沿用当前启动的 `OPENAI_EXTRA_BODY`；完整话术管理等留待后续扩展。
+- 生成设置里的「每种话术候选数」可选 1—5 条，默认 2 条；它作用于 OpenAI/Anthropic 两种生成格式，保存后重启生效，也可用 `JEV_CANDIDATES_PER_TONE` 配置。
 
 也可继续手动编辑：
 
