@@ -1614,7 +1614,7 @@ class HudController(NSObject):
             note = "（首次，含 Vision 加载）" if first_read and t.get("ocr", 0) > 400 else ""
             # say when the fast in-process capture was refused: otherwise a permanent
             # fallback looks like ordinary slowness instead of something to report
-            slow_cap = " · 抓屏走了子进程（进程内被抓图接口拒绝）" \
+            slow_cap = " · 抓屏走了带超时的子进程" \
                 if t.get("capture_path") == "subprocess" else ""
             _log(f"读屏 抓取 {t.get('capture', 0):.0f}ms + OCR {t.get('ocr', 0):.0f}ms"
                  f" = {t.get('total', 0):.0f}ms · 读到 {len(msgs)} 条（对方 {len(thems)} 条）"
